@@ -40,6 +40,9 @@
 #include "stm32f1xx_hal.h"
 
 /* USER CODE BEGIN Includes */
+#include "cat.h"
+#define OLED_ADDR 0x78
+#define OLED_BUF_SIZE 128*64/8+1
 
 /* USER CODE END Includes */
 
@@ -60,6 +63,7 @@ static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_I2C1_Init(void);
+static void OLED_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -104,6 +108,12 @@ int main(void)
   MX_I2C1_Init();
 
   /* USER CODE BEGIN 2 */
+  OLED_Init();
+  uint8_t cmd[] = {0x00, 0xA4};
+  uint16_t CMD_SIZE = 2;
+  HAL_I2C_Master_Transmit(&hi2c1, (uint16_t) OLED_ADDR, cat128x64, OLED_BUF_SIZE, 1000);
+  HAL_I2C_Master_Transmit(&hi2c1, (uint16_t) OLED_ADDR, cmd, CMD_SIZE, 1000);
+
   init_printf(NULL, _tputc);
   printf("%d\n",2);
   uint8_t c='1';
@@ -177,7 +187,7 @@ static void MX_I2C1_Init(void)
 {
 
   hi2c1.Instance = I2C1;
-  hi2c1.Init.ClockSpeed = 100000;
+  hi2c1.Init.ClockSpeed = 400000;
   hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
   hi2c1.Init.OwnAddress1 = 0;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
@@ -260,6 +270,13 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+static void OLED_Init(void) {
+  uint8_t init[] = {0xAE, 0x20, 0x10, 0xB0, 0xC8, 0x00, 0x10, 0x40, 0x81, 
+  0xFF, 0xA1, 0xA6, 0xA8, 0x3F, 0xA4, 0xD3, 0x00, 0xD5, 0xF0, 0xD9, 0x22,
+  0xDA, 0x12, 0xDB, 0x20, 0x8D, 0x14, 0xAF};
+  uint16_t initlen = 28;
+  HAL_I2C_Master_Transmit(&hi2c1, (uint16_t) OLED_ADDR, init, initlen, 1000);
+}
 
 /* USER CODE END 4 */
 
